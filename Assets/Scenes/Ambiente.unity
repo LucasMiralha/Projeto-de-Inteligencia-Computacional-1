@@ -3764,7 +3764,7 @@ MonoBehaviour:
   highVitalityThreshold: 100
   speed: 1
   maxVitality: 100
-  decayRatePerSecond: 50
+  decayRatePerSecond: 7
   regenerationRatePerSecond: 10
 --- !u!54 &1134257651
 Rigidbody:
