@@ -6,14 +6,14 @@ using UnityEngine;
 /// </summary>
 public class Node
 {
-    public bool isWalkable;         // Este nó é um obstáculo?
-    public Vector3 worldPosition;   // Posição no mundo 3D no centro do nó.
-    public int gridX;               // Coordenada X do nó no grid.
-    public int gridY;               // Coordenada Y do nó no grid.
+    public bool isWalkable;         ///Este nó é um obstáculo?
+    public Vector3 worldPosition;   ///Posição no mundo 3D no centro do nó.
+    public int gridX;               ///Coordenada X do nó no grid.
+    public int gridY;               ///Coordenada Y do nó no grid.
 
-    public int gCost;               // Custo do caminho desde o início até este nó.
-    public int hCost;               // Custo heurístico estimado deste nó até o destino.
-    public Node parent;             // Nó anterior no caminho, usado para reconstrução.
+    public int gCost;               ///Custo do caminho desde o início até este nó.
+    public int hCost;               ///Custo heurístico estimado deste nó até o destino.
+    public Node parent;             ///Nó anterior no caminho, usado para reconstrução.
 
     /// <summary>
     /// Construtor para criar uma nova instância de Nó.

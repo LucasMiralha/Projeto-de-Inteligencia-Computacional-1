@@ -15,14 +15,20 @@ public class Pathfinder : MonoBehaviour
     }
 
     /// <summary>
-    /// Inicia o processo de busca de caminho de uma posição inicial para uma final.
+    /// Encontra e retorna um caminho de uma posição inicial para uma final.
     /// </summary>
     /// <param name="startPos">A posição inicial no mundo.</param>
     /// <param name="targetPos">A posição final no mundo.</param>
-    public void FindPath(Vector3 startPos, Vector3 targetPos)
+    /// <returns>Uma lista de nós representando o caminho, ou null se nenhum caminho for encontrado.</returns>
+    public List<Node> FindPath(Vector3 startPos, Vector3 targetPos)
     {
         Node startNode = gridManager.NodeFromWorldPoint(startPos);
         Node targetNode = gridManager.NodeFromWorldPoint(targetPos);
+
+        if (!startNode.isWalkable || !targetNode.isWalkable)
+        {
+            return null; ///Se não é possível encontrar um caminho se o início ou o fim não forem caminháveis
+        }
 
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
@@ -30,12 +36,10 @@ public class Pathfinder : MonoBehaviour
 
         while (openSet.Count > 0)
         {
-            int i = 1;
             Node currentNode = openSet[0];
-            for (i = 1; i < openSet.Count; i++)
+            for (int i = 1; i < openSet.Count; i++)
             {
-                // Encontra o nó com o menor fCost (ou menor hCost em caso de empate).
-                if (openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost)
+                if (openSet[i].fCost < currentNode.fCost || (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost))
                 {
                     currentNode = openSet[i];
                 }
@@ -44,27 +48,23 @@ public class Pathfinder : MonoBehaviour
             openSet.Remove(currentNode);
             closedSet.Add(currentNode);
 
-            // Caminho encontrado
             if (currentNode == targetNode)
             {
-                RetracePath(startNode, targetNode);
-                return;
+                return RetracePath(startNode, targetNode);
             }
 
             foreach (Node neighbour in gridManager.GetNeighbours(currentNode))
             {
-                // Ignora vizinhos que não são caminháveis ou já estão na lista fechada.
                 if (!neighbour.isWalkable || closedSet.Contains(neighbour))
                 {
                     continue;
                 }
 
                 int newMovementCostToNeighbour = currentNode.gCost + GetDistance(currentNode, neighbour);
-                // Se um caminho melhor for encontrado ou o vizinho não estiver na lista aberta
                 if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                 {
-                    neighbour.gCost = newMovementCostToNeighbour;
-                    neighbour.hCost = GetDistance(neighbour, targetNode);
+                    neighbour.gCost = newMovementCostToNeighbour;           ///Cálculo de custo entre vizinhos g(n) (10 ou 14(diagonal))
+                    neighbour.hCost = GetDistance(neighbour, targetNode);   ///Cálculo de custo heuristico é feito na hora pegando a distância entre o nó visualizado e o nó final
                     neighbour.parent = currentNode;
 
                     if (!openSet.Contains(neighbour))
@@ -72,14 +72,13 @@ public class Pathfinder : MonoBehaviour
                 }
             }
         }
+        return null; ///Retorna null se o loop terminar e nenhum caminho for encontrado
     }
 
     /// <summary>
-    /// Reconstrói o caminho final a partir dos nós pais.
+    /// Reconstrói e retorna o caminho final a partir dos nós pais.
     /// </summary>
-    /// <param name="startNode">O nó inicial.</param>
-    /// <param name="endNode">O nó final.</param>
-    void RetracePath(Node startNode, Node endNode)
+    List<Node> RetracePath(Node startNode, Node endNode)
     {
         List<Node> path = new List<Node>();
         Node currentNode = endNode;
@@ -91,15 +90,11 @@ public class Pathfinder : MonoBehaviour
         }
         path.Reverse();
 
+        ///Armazena o caminho no GridManager para visualização com Gizmos
         gridManager.path = path;
+        return path;
     }
 
-    /// <summary>
-    /// Calcula o custo de distância entre dois nós (10 para ortogonal, 14 para diagonal).
-    /// </summary>
-    /// <param name="nodeA">Primeiro nó.</param>
-    /// <param name="nodeB">Segundo nó.</param>
-    /// <returns>O custo de movimento inteiro.</returns>
     int GetDistance(Node nodeA, Node nodeB)
     {
         int dstX = Mathf.Abs(nodeA.gridX - nodeB.gridX);

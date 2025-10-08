@@ -1,62 +1,234 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// Controla o agente, solicitando caminhos e movendo-o ao longo deles.
-/// </summary>
 public class AgentScript : MonoBehaviour
 {
-    public Transform target;        // O alvo que o agente deve seguir.
-    public float speed = 5f;        // A velocidade de movimento do agente.
-    List<Node> path;
-    int targetIndex;
-    Pathfinder pathfinder;
-    GridManager gridManager;
-
-    void Start()
+    ///Enumeração para definir os estados possíveis do agente
+    public enum AgentState
     {
-        pathfinder = FindObjectOfType<Pathfinder>();
-        gridManager = FindObjectOfType<GridManager>();
+        Idle,
+        SeekingPrimaryObjective,
+        SeekingRecovery,
+        Lost,
+        Set
     }
 
-    void Update()
+    public GameObject _gameObject;
+
+    [Header("Objetivos e Comportamento")]
+    public Transform primaryObjective;
+
+    public float lowVitalityThreshold = 30f;
+
+    public float highVitalityThreshold = 95f;
+    public float speed = 5f;
+
+    [Header("Gestão de Vitalidade")]
+    public float maxVitality = 100f;
+    public float decayRatePerSecond = 2.5f;
+    public float regenerationRatePerSecond = 10f;
+
+    ///Propriedade pública para aceder à vitalidade atual
+    public float CurrentVitality { get; private set; }
+
+    ///Evento para notificar a UI sobre mudanças na vitalidade
+    public event Action<float, float> OnVitalityChanged;
+
+    ///Referências a outros sistemas
+    private Pathfinder _pathfinder;
+
+    ///Gestão de estado e caminho
+    private AgentState _currentState;
+    private bool _isInsideRecoveryZone = false;
+    private List<Node> _currentPath;
+    private Coroutine _followPathCoroutine;
+
+    private void Awake()
     {
-        // Solicita um novo caminho a cada frame (pode ser otimizado).
-        pathfinder.FindPath(transform.position, target.position);
-        path = gridManager.path;
-        if (path != null && path.Count > 0)
+        CurrentVitality = maxVitality;
+        _pathfinder = FindObjectOfType<Pathfinder>();
+    }
+
+    private void Start()
+    {
+        if (primaryObjective == null)
         {
-            StopCoroutine("FollowPath");
-            StartCoroutine("FollowPath");
+            Debug.LogError("Objetivo primário não definido! Entrando no estado Idle.", this);
+            EnterState(AgentState.Idle);
+        }
+        else
+        {
+            EnterState(AgentState.SeekingPrimaryObjective);
         }
     }
 
-    /// <summary>
-    /// Coroutine que move o agente ao longo do caminho encontrado.
-    /// </summary>
-    IEnumerator FollowPath()
+    private void Update()
     {
-        if (path != null && path.Count > 0)
+        if (_currentState == AgentState.Lost)
         {
-            Node currentWaypointNode = path[0];
-            targetIndex = 0;
+            speed = 0;
+            transform.rotation = Quaternion.Euler(new Vector3(180,0,0));
+            _gameObject.transform.position = new Vector3(transform.position.x, transform.position.y+0.1f, transform.position.z);
+        }
 
-            while (true)
-            {
-                if (transform.position == currentWaypointNode.worldPosition)
+        if (_currentState == AgentState.Set)
+        {
+            speed = 0;
+            CurrentVitality = 100;
+        }
+
+        ///Gestão da vitalidade
+        HandleVitality();
+
+        ///Máquina de estados que decide se deve mudar de comportamento
+        UpdateStateMachine();
+    }
+
+    private void HandleVitality()
+    {
+        float oldVitality = CurrentVitality;
+
+        if (_isInsideRecoveryZone)
+        {
+            ///Regenera se estiver dentro de uma zona
+            CurrentVitality += regenerationRatePerSecond * Time.deltaTime;
+        }
+        else
+        {
+            ///Decai se estiver fora
+            CurrentVitality -= decayRatePerSecond * Time.deltaTime;
+        }
+
+        CurrentVitality = Mathf.Clamp(CurrentVitality, 0f, maxVitality);
+
+        ///Se o valor mudou, notifica os ouvintes (como a UI)
+        if (CurrentVitality != oldVitality)
+        {
+            OnVitalityChanged?.Invoke(CurrentVitality, maxVitality);
+        }
+    }
+
+    private void UpdateStateMachine()
+    {
+        if (CurrentVitality <= 0 && _currentState != AgentState.Lost)
+        {
+            EnterState(AgentState.Lost);
+            return;
+        }
+
+        switch (_currentState)
+        {
+            case AgentState.SeekingPrimaryObjective:
+                if (CurrentVitality < lowVitalityThreshold)
                 {
-                    targetIndex++;
-                    if (targetIndex >= path.Count)
-                    {
-                        yield break; // Fim do caminho
-                    }
-                    currentWaypointNode = path[targetIndex];
+                    EnterState(AgentState.SeekingRecovery);
+                }
+                break;
+
+            case AgentState.SeekingRecovery:
+                if (CurrentVitality >= highVitalityThreshold)
+                {
+                    EnterState(AgentState.SeekingPrimaryObjective);
+                }
+                break;
+        }
+    }
+
+    private void EnterState(AgentState newState)
+    {
+        if (_currentState == newState) return;
+
+        _currentState = newState;
+        Debug.Log($"Agente entrou no estado: {newState}");
+
+        if (_followPathCoroutine != null)
+        {
+            StopCoroutine(_followPathCoroutine);
+        }
+
+        Vector3? targetPosition = GetTargetPositionForState(newState);
+
+        if (targetPosition.HasValue)
+        {
+            _currentPath = _pathfinder.FindPath(transform.position, targetPosition.Value);
+            _followPathCoroutine = StartCoroutine(FollowPath());
+        }
+        else
+        {
+            _currentPath = null;
+        }
+    }
+
+    private Vector3? GetTargetPositionForState(AgentState state)
+    {
+        switch (state)
+        {
+            case AgentState.SeekingPrimaryObjective:
+                return primaryObjective.position;
+
+            case AgentState.SeekingRecovery:
+                RecoveryZone nearestZone = RecoveryZoneManager.Instance.GetNearestZone(transform.position);
+                if (nearestZone != null)
+                {
+                    return nearestZone.transform.position;
+                }
+                else
+                {
+                    Debug.LogWarning("Precisa de recuperação, mas nenhuma zona encontrada!");
+                    return null; ///Retorna nulo se não houver para onde ir
                 }
 
-                transform.position = Vector3.MoveTowards(transform.position, currentWaypointNode.worldPosition, speed * Time.deltaTime);
-                yield return null;
+            case AgentState.Idle:
+            case AgentState.Lost:
+            default:
+                return null;
+        }
+    }
+
+    IEnumerator FollowPath()
+    {
+        if (_currentPath == null || _currentPath.Count == 0)
+        {
+            yield break;
+        }
+
+        int targetIndex = 0;
+        while (true)
+        {
+            Node currentWaypoint = _currentPath[targetIndex];
+            if (Vector3.Distance(transform.position, currentWaypoint.worldPosition) < 0.1f)
+            {
+                targetIndex++;
+                if (targetIndex >= _currentPath.Count)
+                {
+                    yield break; ///Fim do caminho
+                }
             }
+
+            transform.position = Vector3.MoveTowards(transform.position, _currentPath[targetIndex].worldPosition, speed * Time.deltaTime);
+            yield return null;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.GetComponent<RecoveryZone>() != null)
+        {
+            _isInsideRecoveryZone = true;
+        }
+        if (other.gameObject.CompareTag("Finish"))
+        {
+            EnterState(AgentState.Set);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.GetComponent<RecoveryZone>() != null)
+        {
+            _isInsideRecoveryZone = false;
         }
     }
 }

@@ -1,15 +1,16 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[ExecuteAlways]
 /// <summary>
 /// Gerencia a criação, armazenamento e acesso ao grid de nós para pathfinding.
 /// </summary>
 public class GridManager : MonoBehaviour
 {
-    public LayerMask unwalkableMask;    // Layer que contém os obstáculos.
-    public Transform plane;             // O plano que define a área do grid.
-    public float nodeRadius;            // O raio de cada nó, define a resolução.
-    Node[,] grid;                       // O array 2D que armazena o grid.
+    public LayerMask unwalkableMask;    ///Layer que contém os obstáculos.
+    public Transform plane;             ///O plano que define a área do grid.
+    public float nodeRadius;            ///O raio de cada nó, define a resolução.
+    Node[,] grid;                       ///O array 2D que armazena o grid.
 
     float nodeDiameter;
     int gridSizeX, gridSizeY;
@@ -20,6 +21,11 @@ public class GridManager : MonoBehaviour
         // Calcula as dimensões do grid com base no tamanho do plano e no diâmetro do nó.
         gridSizeX = Mathf.RoundToInt(plane.localScale.x * 10 / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(plane.localScale.z * 10 / nodeDiameter);
+        CreateGrid();
+    }
+
+    void Update()
+    {
         CreateGrid();
     }
 
@@ -95,19 +101,19 @@ public class GridManager : MonoBehaviour
     /// </summary>
     void OnDrawGizmos()
     {
-        // Desenha um wireframe representando a área total do grid.
+        ///Desenha um wireframe representando a área total do grid.
         Gizmos.DrawWireCube(transform.position, new Vector3(plane.localScale.x * 10, 1, plane.localScale.z * 10));
 
         if (grid != null)
         {
             foreach (Node n in grid)
             {
-                // Define a cor do gizmo com base na transitabilidade do nó.
+                ///Define a cor do gizmo com base na transitabilidade do nó.
                 Gizmos.color = (n.isWalkable) ? Color.white : Color.red;
                 if (path != null && path.Contains(n))
                     Gizmos.color = Color.black; // Cor para nós no caminho final.
 
-                // Desenha um cubo no local de cada nó.
+                ///Desenha um cubo no local de cada nó.
                 Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter - .1f));
             }
         }
