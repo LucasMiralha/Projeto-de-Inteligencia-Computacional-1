@@ -9,6 +9,13 @@ public class Pathfinder : MonoBehaviour
 {
     GridManager gridManager;
 
+    [HideInInspector]
+    public List<Node> openSet_ForGizmos;
+    [HideInInspector]
+    public HashSet<Node> closedSet_ForGizmos;
+    [HideInInspector]
+    public List<Node> finalPath_ForGizmos;
+
     void Awake()
     {
         gridManager = GetComponent<GridManager>();
@@ -50,7 +57,9 @@ public class Pathfinder : MonoBehaviour
 
             if (currentNode == targetNode)
             {
-                return RetracePath(startNode, targetNode);
+                openSet_ForGizmos = openSet;
+                closedSet_ForGizmos = closedSet;
+                return RetracePath(startNode, targetNode); ;
             }
 
             foreach (Node neighbour in gridManager.GetNeighbours(currentNode))
@@ -73,6 +82,9 @@ public class Pathfinder : MonoBehaviour
             }
         }
         return null; ///Retorna null se o loop terminar e nenhum caminho for encontrado
+        openSet_ForGizmos = openSet;
+        closedSet_ForGizmos = closedSet;
+        finalPath_ForGizmos = null;
     }
 
     /// <summary>
@@ -91,7 +103,7 @@ public class Pathfinder : MonoBehaviour
         path.Reverse();
 
         ///Armazena o caminho no GridManager para visualização com Gizmos
-        gridManager.path = path;
+        finalPath_ForGizmos = path;
         return path;
     }
 

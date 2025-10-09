@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class AgentScript : MonoBehaviour
+public class GreedyAgentScript : MonoBehaviour
 {
     ///Enumeração para definir os estados possíveis do agente
     public enum AgentState
@@ -37,12 +37,12 @@ public class AgentScript : MonoBehaviour
     public event Action<float, float> OnVitalityChanged;
 
     ///Referências a outros sistemas
-    public Pathfinder _pathfinder;
+    public GreedyPathfinder _pathfinder;
 
     ///Gestão de estado e caminho
     private AgentState _currentState;
     private bool _isInsideRecoveryZone = false;
-    private List<Node> _currentPath;
+    private List<GreedyNode> _currentPath;
     private Coroutine _followPathCoroutine;
 
     private void Awake()
@@ -68,8 +68,8 @@ public class AgentScript : MonoBehaviour
         if (_currentState == AgentState.Lost)
         {
             speed = 0;
-            transform.rotation = Quaternion.Euler(new Vector3(180,0,0));
-            _gameObject.transform.position = new Vector3(transform.position.x, transform.position.y+0.1f, transform.position.z);
+            transform.rotation = Quaternion.Euler(new Vector3(180, 0, 0));
+            _gameObject.transform.position = new Vector3(transform.position.x, transform.position.y + 0.1f, transform.position.z);
         }
 
         if (_currentState == AgentState.Set)
@@ -196,7 +196,7 @@ public class AgentScript : MonoBehaviour
         int targetIndex = 0;
         while (true)
         {
-            Node currentWaypoint = _currentPath[targetIndex];
+            GreedyNode currentWaypoint = _currentPath[targetIndex];
             if (Vector3.Distance(transform.position, currentWaypoint.worldPosition) < 0.1f)
             {
                 targetIndex++;
