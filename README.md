@@ -55,3 +55,6 @@ Para depuração e análise, o GridManager.cs implementa o método OnDrawGizmos(
   Amarelo: Nós no Open Set (a fronteira de busca atual).
 
   Verde: Nós que compõem o caminho final ótimo.
+
+## Baseado na imagem:
+![deserto](https://github.com/user-attachments/assets/5b6df0df-2776-442a-941b-85f605413a01)
