@@ -7427,8 +7427,6 @@ GameObject:
   - component: {fileID: 642432230}
   - component: {fileID: 642432229}
   - component: {fileID: 642432228}
-  - component: {fileID: 642432232}
-  - component: {fileID: 642432231}
   m_Layer: 0
   m_Name: Ambiente
   m_TagString: Untagged
@@ -7631,37 +7629,6 @@ Transform:
   - {fileID: 2063331803}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &642432231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 642432227}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9882bf531b7411f46baa033c8467bab5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GreedyPathfinder
---- !u!114 &642432232
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 642432227}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93f8702e571e28d4bad672e606ea7241, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GreedyGridManager
-  displayGridGizmos: 1
-  greedypathfinder: {fileID: 642432231}
-  unwalkableMask:
-    serializedVersion: 2
-    m_Bits: 8
-  plane: {fileID: 1552057772}
-  greedyNodeRadius: 0.1
 --- !u!4 &646096024 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2236601278992177024, guid: a4937e4665b01f54990bcfaed61ee8c9, type: 3}
@@ -10199,7 +10166,7 @@ GameObject:
   - component: {fileID: 871584643}
   - component: {fileID: 871584642}
   m_Layer: 0
-  m_Name: Agente
+  m_Name: Agente A*
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10218,6 +10185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gameObject: {fileID: 1203869236}
+  searchAlgorithm: 0
   primaryObjective: {fileID: 1290287615}
   lowVitalityThreshold: 30
   highVitalityThreshold: 100
@@ -15062,9 +15030,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1189222665}
+  - component: {fileID: 1189222666}
   - component: {fileID: 1189222663}
   - component: {fileID: 1189222662}
-  - component: {fileID: 1189222666}
   m_Layer: 0
   m_Name: Agente Guloso
   m_TagString: Untagged
@@ -15145,10 +15113,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1189222661}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 335a1a544aa12564b9cbbb96ef1193ce, type: 3}
+  m_Script: {fileID: 11500000, guid: d9ededc12c69eda44bb265b0d9e61e66, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GreedyAgentScript
+  m_EditorClassIdentifier: Assembly-CSharp::AgentScript
   _gameObject: {fileID: 315310255}
+  searchAlgorithm: 1
   primaryObjective: {fileID: 1290287615}
   lowVitalityThreshold: 30
   highVitalityThreshold: 100
@@ -15156,7 +15125,7 @@ MonoBehaviour:
   maxVitality: 100
   decayRatePerSecond: 7
   regenerationRatePerSecond: 10
-  _pathfinder: {fileID: 642432231}
+  _pathfinder: {fileID: 642432228}
 --- !u!4 &1198964107 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2236601278992177024, guid: a4937e4665b01f54990bcfaed61ee8c9, type: 3}

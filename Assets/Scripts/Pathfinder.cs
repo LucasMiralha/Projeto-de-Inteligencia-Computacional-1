@@ -3,7 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// Implementa o algoritmo A* para encontrar o caminho mais curto em um grid.
+/// Utilizado para escolher o tipo de algoritmo que será utilizado pelo agente
+/// </summary>
+public enum PathfindingAlgorithm
+{
+    AStar,
+    Greedy
+}
+
+/// <summary>
+/// Código principal para implementação dos pathfinders
 /// </summary>
 public class Pathfinder : MonoBehaviour
 {
@@ -22,12 +31,11 @@ public class Pathfinder : MonoBehaviour
     }
 
     /// <summary>
-    /// Encontra e retorna um caminho de uma posição inicial para uma final.
+    /// Encontra e retorna um caminho de uma posição inicial para uma final
     /// </summary>
-    /// <param name="startPos">A posição inicial no mundo.</param>
-    /// <param name="targetPos">A posição final no mundo.</param>
-    /// <returns>Uma lista de nós representando o caminho, ou null se nenhum caminho for encontrado.</returns>
-    public List<Node> FindPath(Vector3 startPos, Vector3 targetPos)
+    /// <param name="startPos">A posição inicial no mundo</param>
+    /// <param name="targetPos">A posição final no mundo</param>
+    public List<Node> FindPath(Vector3 startPos, Vector3 targetPos, PathfindingAlgorithm algorithm)
     {
         Node startNode = gridManager.NodeFromWorldPoint(startPos);
         Node targetNode = gridManager.NodeFromWorldPoint(targetPos);
@@ -44,11 +52,24 @@ public class Pathfinder : MonoBehaviour
         while (openSet.Count > 0)
         {
             Node currentNode = openSet[0];
+
             for (int i = 1; i < openSet.Count; i++)
             {
-                if (openSet[i].fCost < currentNode.fCost || (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost))
+                if (algorithm == PathfindingAlgorithm.AStar)
                 {
-                    currentNode = openSet[i];
+                    // A*:
+                    if (openSet[i].fCost < currentNode.fCost || (openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost))
+                    {
+                        currentNode = openSet[i];
+                    }
+                }
+                else // Greedy
+                {
+                    // Greedy:
+                    if (openSet[i].hCost < currentNode.hCost)
+                    {
+                        currentNode = openSet[i];
+                    }
                 }
             }
 
@@ -88,7 +109,7 @@ public class Pathfinder : MonoBehaviour
     }
 
     /// <summary>
-    /// Reconstrói e retorna o caminho final a partir dos nós pais.
+    /// Reconstrói e retorna o caminho final a partir dos nós
     /// </summary>
     List<Node> RetracePath(Node startNode, Node endNode)
     {

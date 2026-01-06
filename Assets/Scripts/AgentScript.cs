@@ -3,9 +3,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// Gerencia o comportamento do agente
+/// 
+/// Notas:
+/// Os gizmos para visualização dos caminhos entre diferentes agentes de diferentes algoritmos
+/// podem se sobrepor, apagando o gizmos anterior e dando display no mais recente
+/// </summary>
 public class AgentScript : MonoBehaviour
 {
-    ///Enumeração para definir os estados possíveis do agente
+    ///Utilizado para definir os estados possíveis do agente
     public enum AgentState
     {
         Idle,
@@ -16,6 +23,9 @@ public class AgentScript : MonoBehaviour
     }
 
     public GameObject _gameObject;
+
+    [Header("Algoritmo de Busca")]
+    public PathfindingAlgorithm searchAlgorithm = PathfindingAlgorithm.AStar;
 
     [Header("Objetivos e Comportamento")]
     public Transform primaryObjective;
@@ -36,7 +46,6 @@ public class AgentScript : MonoBehaviour
     ///Evento para notificar a UI sobre mudanças na vitalidade
     public event Action<float, float> OnVitalityChanged;
 
-    ///Referências a outros sistemas
     public Pathfinder _pathfinder;
 
     ///Gestão de estado e caminho
@@ -54,7 +63,7 @@ public class AgentScript : MonoBehaviour
     {
         if (primaryObjective == null)
         {
-            Debug.LogError("Objetivo primário não definido! Entrando no estado Idle.", this);
+            Debug.LogError("Objetivo não definido! Entrando no estado Idle", this);
             EnterState(AgentState.Idle);
         }
         else
@@ -67,6 +76,7 @@ public class AgentScript : MonoBehaviour
     {
         if (_currentState == AgentState.Lost)
         {
+            ///Morre :(
             speed = 0;
             transform.rotation = Quaternion.Euler(new Vector3(180,0,0));
             _gameObject.transform.position = new Vector3(transform.position.x, transform.position.y+0.1f, transform.position.z);
@@ -78,10 +88,8 @@ public class AgentScript : MonoBehaviour
             CurrentVitality = 100;
         }
 
-        ///Gestão da vitalidade
+        ///Gestão do agente
         HandleVitality();
-
-        ///Máquina de estados que decide se deve mudar de comportamento
         UpdateStateMachine();
     }
 
@@ -151,7 +159,7 @@ public class AgentScript : MonoBehaviour
 
         if (targetPosition.HasValue)
         {
-            _currentPath = _pathfinder.FindPath(transform.position, targetPosition.Value);
+            _currentPath = _pathfinder.FindPath(transform.position, targetPosition.Value, searchAlgorithm);
             _followPathCoroutine = StartCoroutine(FollowPath());
         }
         else

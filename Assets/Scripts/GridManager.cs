@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 [ExecuteAlways]
 /// <summary>
-/// Gerencia a criação, armazenamento e acesso ao grid de nós para pathfinding.
+/// Gerencia a criação, armazenamento e acesso ao grid de nós para pathfinding. Faz a discretização do ambiente
 /// </summary>
 public class GridManager : MonoBehaviour
 {
     public bool displayGridGizmos;
     public Pathfinder pathfinder;       ///Pathfinder do metodo
-    public LayerMask unwalkableMask;    ///Layer que contém os obstáculos.
-    public Transform plane;             ///O plano que define a área do grid.
-    public float nodeRadius;            ///O raio de cada nó, define a resolução.
-    Node[,] grid;                       ///O array 2D que armazena o grid.
+    public LayerMask unwalkableMask;    ///Layer de identificação dos obstáculos
+    public Transform plane;             ///O objeto plano que define a área do grid
+    public float nodeRadius;            ///O raio de cada nó, define a resolução (resoluções maiores podem gerar soluções mais otimizadas dependendo do tamanho dos obstáculos)
+    Node[,] grid;                       ///O array 2D que armazena o grid
 
     float nodeDiameter;
     int gridSizeX, gridSizeY;
@@ -20,7 +20,6 @@ public class GridManager : MonoBehaviour
     void Awake()
     {
         nodeDiameter = nodeRadius * 2;
-        // Calcula as dimensões do grid com base no tamanho do plano e no diâmetro do nó.
         gridSizeX = Mathf.RoundToInt(plane.localScale.x * 10 / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(plane.localScale.z * 10 / nodeDiameter);
         CreateGrid();
@@ -28,13 +27,12 @@ public class GridManager : MonoBehaviour
 
     void Update()
     {
-        ///Habilitar essa linha para poder mudar o ambiente em tempo real
-        ///e torna-lo responsivo na visão do agente
+        ///Habilitar essa linha para poder mudar o ambiente em tempo real e torná-lo responsivo na visão do agente
         ///CreateGrid();
     }
 
     /// <summary>
-    /// Cria o grid de nós, verificando cada posição em busca de obstáculos.
+    /// Cria o grid de nós, verificando cada posição em busca dos obstáculos
     /// </summary>
     void CreateGrid()
     {
@@ -46,7 +44,7 @@ public class GridManager : MonoBehaviour
             for (int y = 0; y < gridSizeY; y++)
             {
                 Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.forward * (y * nodeDiameter + nodeRadius);
-                // Verifica se há colisores na camada de obstáculos na posição do nó.
+                // Verifica se há colisores na camada de obstáculos na posição do nó
                 bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unwalkableMask));
                 grid[x, y] = new Node(walkable, worldPoint, x, y);
             }
@@ -54,10 +52,10 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Converte uma posição do mundo em um nó correspondente no grid.
+    /// Converte uma posição do mundo em um nó correspondente no grid
     /// </summary>
-    /// <param name="worldPosition">A posição no espaço do mundo.</param>
-    /// <returns>O nó do grid na posição especificada.</returns>
+    /// <param name="worldPosition">A posição no espaço do mundo</param>
+    /// <returns>O nó do grid na posição especificada</returns>
     public Node NodeFromWorldPoint(Vector3 worldPosition)
     {
         float percentX = (worldPosition.x - transform.position.x + plane.localScale.x * 10 / 2) / (plane.localScale.x * 10);
@@ -71,10 +69,10 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Obtém os nós vizinhos de um dado nó.
+    /// Obtém os nós vizinhos de um dado nó
     /// </summary>
-    /// <param name="node">O nó central.</param>
-    /// <returns>Uma lista de nós vizinhos.</returns>
+    /// <param name="node">O nó central</param>
+    /// <returns>Uma lista de nós vizinhos</returns>
     public List<Node> GetNeighbours(Node node)
     {
         List<Node> neighbours = new List<Node>();
@@ -101,14 +99,14 @@ public class GridManager : MonoBehaviour
     public List<Node> path; // Para visualizar o caminho encontrado
 
     /// <summary>
-    /// Desenha gizmos na Scene View para visualização do grid e do caminho.
+    /// Desenha gizmos na Scene View para visualização do grid e do caminho
     /// </summary>
     void OnDrawGizmos()
     {
         if (!displayGridGizmos)
         return;
 
-        ///Desenha um wireframe representando a área total do grid.
+        ///Desenha um wireframe representando a área total do grid
         Gizmos.DrawWireCube(transform.position, new Vector3(plane.localScale.x * 10, 1, plane.localScale.z * 10));
 
         if (grid != null && pathfinder != null)
