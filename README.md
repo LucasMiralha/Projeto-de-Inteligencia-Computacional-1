@@ -34,9 +34,9 @@ A base do movimento do agente é o nosso sistema de pathfinding customizado.
 
 ### 2. Comportamento (Controlador Unificado)
 
-O AgentScript.cs e GreedyAgentScript são os componentes centrais que ditam as ações dos agentes.
+O AgentScript.cs é o componente central que dita as ações do agente.
 
-  Máquina de Estados (FSM): O agente opera em estados (SeekingPrimaryObjective, SeekingRecovery). O método UpdateStateMachine() verifica constantemente as condições (nível de vitalidade) para decidir se deve transitar para um novo estado.
+  Máquina de Estados (FSM): O agente opera em estados (SeekingPrimaryObjective, SeekingRecovery). O método UpdateStateMachine() verifica constantemente as condições do agente para decidir se deve transitar para um novo estado.
 
   Gestão de Vitalidade: O controlador gere o decaimento e a regeneração da vitalidade. Este recurso é o principal gatilho para as decisões da FSM.
 
